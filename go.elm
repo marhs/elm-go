@@ -4,26 +4,25 @@
 import Signal (Signal, sampleOn, foldp, (<~))
 import Signal
 import Mouse
-import Text (asText)
-
 import Graphics.Collage (..)
 import Graphics.Element (..)
-
 import List (map, filter)
 import Color
 import Array (Array)
 import Array
 import Maybe (withDefault, Maybe (Just, Nothing))
+
 -----------
 -- Model --
 -----------
+
 type alias State = { stones : Array Int
                    , points : (Int,Int) 
                    , nextTurn : Int 
                    }
 
--- The initial state contains the zero for each possible roll
--- Starts with a seed of 42 (changing this will change the outcome of the sequence)
+-- The initial states contains an array filled with "-1"
+-- If a stone is placed, it's changed to 0 (black) or 1 (white)
 initialState : State
 initialState = { stones = Array.repeat (19 * 19) -1
                , points = (0,0) 
@@ -58,18 +57,8 @@ drawStones stones =
         drawStone = \a -> ( stone (a % 19) (a // 19) (s a) )
     in map drawStone (filter (\x -> (s x)>=0) [0..(19 * 19 - 1)])
 
--- Draw the board lines
--- The distances are hardcoded: 30px between lines and 540px the full board
-grid : List Form
-grid =
-    let segV s i = traced (solid Color.black) <| segment (i,-s/2) (i,s/2)
-        segH s i = traced (solid Color.black) <| segment (-s/2,i) (s/2,i)
-        coords = map (\x -> x*30) [-9..9]
-    in (map (\x -> (segV 540 x)) coords) ++
-       (map (\x -> (segH 540 x)) coords)
-
--- Draws a stone at x y (go coordinates, not pixels)
---      draw 0 0 = draws a stone at the bottom left corner
+-- Draws a stone at x y (go coordinates, not pixels) with color 0 or 1
+--      draw 0 0 1 = draws a white stone at the bottom left corner
 stone : Int -> Int -> Int -> Form
 stone x y c =
     let p a = toFloat (-270 + 30*a)
@@ -81,24 +70,30 @@ stone x y c =
     in group [fill, border]
 
 
--- Append the stones to the list
+-- Draw the board lines
+-- The distances are hardcoded: 30px between lines and 540px the full board
+grid : List Form
+grid =
+    let segV s i = traced (solid Color.black) <| segment (i,-s/2) (i,s/2)
+        segH s i = traced (solid Color.black) <| segment (-s/2,i) (s/2,i)
+        coords = map (\x -> x*30) [-9..9]
+    in (map (\x -> (segV 540 x)) coords) ++
+       (map (\x -> (segH 540 x)) coords)
+
 main : Signal Element
---main = display initialState
 main = display <~ (foldp click initialState input)
 
 -------------
 -- Signals --
 -------------
 
-
+-- Transform from pixels to coordinates
 toCoords : (Int,Int) -> (Int,Int)
 toCoords (x,y) =
     let x' = (x - 15) // 30
         y' = (600 - y - 15) // 30
     in (x', y')
 
+-- Update with the coordinates when clicked
 input : Signal (Int, Int)
 input = sampleOn Mouse.clicks (Signal.map toCoords Mouse.position)
-
-
-

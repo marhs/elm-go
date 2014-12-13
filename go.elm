@@ -77,9 +77,14 @@ grid =
     let segV s i = traced (solid Color.black) <| segment (i,-s/2) (i,s/2)
         segH s i = traced (solid Color.black) <| segment (-s/2,i) (s/2,i)
         coords = map (\x -> x*30) [-9..9]
+        cPoints = [(0,0)
+                  ,(-180,0),(180,0),(0,-180),(0,180)
+                  ,(-180,-180),(-180,180),(180,-180),(180,180)
+                  ]
+        fill (x,y) = move (x, y) <| filled Color.black <| circle 4
     in (map (\x -> (segV 540 x)) coords) ++
-       (map (\x -> (segH 540 x)) coords)
-
+       (map (\x -> (segH 540 x)) coords) ++
+       (map fill cPoints)
 main : Signal Element
 main = display <~ (foldp click initialState input)
 

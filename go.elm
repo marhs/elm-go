@@ -37,7 +37,7 @@ initialState = { stones = Array.repeat (19 * 19) -1
 click : (Int, Int) -> State -> State
 click (x,y) state = 
     if | (x > 18) || (y > 18) -> state 
-       | (withDefault -1 (Array.get (19 * y + x) state.stones)) /= -1 -> changeColor x y state
+       | (withDefault -1 (Array.get (19 * y + x) state.stones)) /= -1 -> deleteStone x y state
        | otherwise ->
             let ix = (19 * y + x) 
                 stones' = Array.set ix state.nextTurn state.stones 
@@ -45,11 +45,11 @@ click (x,y) state =
                 points' = state.points
             in { stones = stones', points = points', nextTurn = nextTurn' }
 
--- Change color of a placed stone
-changeColor : Int -> Int -> State -> State
-changeColor a b state =
+-- Delete a placed stone
+deleteStone : Int -> Int -> State -> State
+deleteStone a b state =
   let stone x y = (withDefault -1 (Array.get (19 * y + x) state.stones))
-      stone' = ((stone a b) % 3) - 1
+      stone' = -1
       ix = (19 * b + a)
       stones' = Array.set ix stone' state.stones 
   in { state | stones <- stones' }

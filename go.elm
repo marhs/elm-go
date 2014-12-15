@@ -33,6 +33,7 @@ initialState = { stones = Array.repeat (19 * 19) -1
 -- Update --
 ------------
 
+-- Modifies a state adding a stone
 click : (Int, Int) -> State -> State
 click (x,y) state = 
     if | (x > 18) || (y > 18) -> state 
@@ -44,6 +45,7 @@ click (x,y) state =
                 points' = state.points
             in { stones = stones', points = points', nextTurn = nextTurn' }
 
+-- Change color of a placed stone
 changeColor : Int -> Int -> State -> State
 changeColor a b state =
   let stone x y = (withDefault -1 (Array.get (19 * y + x) state.stones))

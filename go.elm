@@ -49,9 +49,8 @@ click (x,y) state =
 deleteStone : Int -> Int -> State -> State
 deleteStone a b state =
   let stone x y = (withDefault -1 (Array.get (19 * y + x) state.stones))
-      stone' = -1
       ix = (19 * b + a)
-      stones' = Array.set ix stone' state.stones 
+      stones' = Array.set ix -1 state.stones 
   in { state | stones <- stones' }
 
 ----------

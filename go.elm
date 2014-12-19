@@ -73,18 +73,18 @@ deleteStone a b state =
 ----------
 
 display : State -> Element
-display s = collage 600 600 <| grid ++ drawStones s.stones 
+display s = collage 600 600 <| (grid s.board) ++ drawStones s.stones s.board
  
-drawStones : Array Int -> List Form
-drawStones stones = 
+drawStones : Array Int -> Board -> List Form
+drawStones stones b = 
     let s x = withDefault 0 (Array.get x stones)
-        drawStone = \a -> ( stone (a % 19) (a // 19) (s a) )
+        drawStone = \a -> ( stone (a % 19) (a // 19) (s a) b)
     in map drawStone (filter (\x -> (s x)>=0) [0..(19 * 19 - 1)])
 
 -- Draws a stone at x y (go coordinates, not pixels) with color 0 or 1
 --      draw 0 0 1 = draws a white stone at the bottom left corner
-stone : Int -> Int -> Int -> Form
-stone x y c =
+stone : Int -> Int -> Int -> Board -> Form
+stone x y c b =
     let p a = toFloat (-270 + 30*a)
         co =
           if | c == 0 -> Color.black
@@ -96,18 +96,15 @@ stone x y c =
 
 -- Draw the board lines
 -- The distances are hardcoded: 30px between lines and 540px the full board
-grid : List Form
-grid =
+grid : Board -> List Form
+grid b =
     let segV' s i = traced (solid Color.black) <| segment (i,-s/2) (i,s/2)
         segH' s i = traced (solid Color.black) <| segment (-s/2,i) (s/2,i)
         segV s i = segV' (toFloat s) (toFloat i)
         segH s i = segH' (toFloat s) (toFloat i)
         coords = map (\x -> x*30) [-9..9]
-        cPoints = [(0,0)
-                  ,(-180,0),(180,0),(0,-180),(0,180)
-                  ,(-180,-180),(-180,180),(180,-180),(180,180)
-                  ]
-        fill (x,y) = move (x, y) <| filled Color.black <| circle 4
+        cPoints = b.dots 
+        fill (x,y) = move (toFloat x, toFloat y) <| filled Color.black <| circle 4
     in (map (\x -> (segV 540 x)) coords) ++
        (map (\x -> (segH 540 x)) coords) ++
        (map fill cPoints)

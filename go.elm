@@ -17,8 +17,8 @@ import Maybe (withDefault, Maybe (Just, Nothing))
 -----------
 
 type alias Board = { size : Int
-                   , pixels : Int
-                   , dots : List (Int, Int)
+                   , pix : Float
+                   , dots : List (Float, Float)
                    }
 
 type alias State = { stones : Array Int
@@ -31,7 +31,7 @@ type alias State = { stones : Array Int
 -- If a stone is placed, it's changed to 0 (black) or 1 (white)
 b : Board
 b = { size = 19
-    , pixels = 30
+    , pix = 30
     , dots = [(0,0)
              ,(-180,0),(180,0),(0,-180),(0,180)
              ,(-180,-180),(-180,180),(180,-180),(180,180)
@@ -98,16 +98,15 @@ stone x y c b =
 -- The distances are hardcoded: 30px between lines and 540px the full board
 grid : Board -> List Form
 grid b =
-    let segV' s i = traced (solid Color.black) <| segment (i,-s/2) (i,s/2)
-        segH' s i = traced (solid Color.black) <| segment (-s/2,i) (s/2,i)
-        segV s i = segV' (toFloat s) (toFloat i)
-        segH s i = segH' (toFloat s) (toFloat i)
-        coords = map (\x -> x*30) [-9..9]
+    let segV s i = traced (solid Color.black) <| segment (i,-s/2) (i,s/2)
+        segH s i = traced (solid Color.black) <| segment (-s/2,i) (s/2,i)
+        coords = map (\x -> x*b.pix) [(toFloat (-b.size // 2))..(toFloat (b.size // 2))]
         cPoints = b.dots 
-        fill (x,y) = move (toFloat x, toFloat y) <| filled Color.black <| circle 4
-    in (map (\x -> (segV 540 x)) coords) ++
-       (map (\x -> (segH 540 x)) coords) ++
+        fill (x,y) = move (x, y) <| filled Color.black <| circle 4
+    in (map (\x -> (segV (toFloat (b.size - 1) * b.pix) x)) coords) ++
+       (map (\x -> (segH (toFloat (b.size - 1) * b.pix) x)) coords) ++
        (map fill cPoints)
+
 main : Signal Element
 main = display <~ (foldp click initialState input)
 

@@ -16,17 +16,33 @@ import Maybe (withDefault, Maybe (Just, Nothing))
 -- Model --
 -----------
 
+type alias Board = { size : Int
+                   , pixels : Int
+                   , dots : List (Int, Int)
+                   }
+
 type alias State = { stones : Array Int
                    , points : (Int,Int) 
                    , nextTurn : Int 
+                   , board : Board
                    }
 
 -- The initial states contains an array filled with "-1"
 -- If a stone is placed, it's changed to 0 (black) or 1 (white)
+b : Board
+b = { size = 19
+    , pixels = 30
+    , dots = [(0,0)
+             ,(-180,0),(180,0),(0,-180),(0,180)
+             ,(-180,-180),(-180,180),(180,-180),(180,180)
+             ]
+    }
+
 initialState : State
 initialState = { stones = Array.repeat (19 * 19) -1
                , points = (0,0) 
                , nextTurn = 0 
+               , board = b
                }
 
 ------------
@@ -42,8 +58,7 @@ click (x,y) state =
             let ix = (19 * y + x) 
                 stones' = Array.set ix state.nextTurn state.stones 
                 nextTurn' = (state.nextTurn + 1) % 2
-                points' = state.points
-            in { stones = stones', points = points', nextTurn = nextTurn' }
+            in { state | stones <- stones', nextTurn <- nextTurn' }
 
 -- Delete a placed stone
 deleteStone : Int -> Int -> State -> State
@@ -83,8 +98,10 @@ stone x y c =
 -- The distances are hardcoded: 30px between lines and 540px the full board
 grid : List Form
 grid =
-    let segV s i = traced (solid Color.black) <| segment (i,-s/2) (i,s/2)
-        segH s i = traced (solid Color.black) <| segment (-s/2,i) (s/2,i)
+    let segV' s i = traced (solid Color.black) <| segment (i,-s/2) (i,s/2)
+        segH' s i = traced (solid Color.black) <| segment (-s/2,i) (s/2,i)
+        segV s i = segV' (toFloat s) (toFloat i)
+        segH s i = segH' (toFloat s) (toFloat i)
         coords = map (\x -> x*30) [-9..9]
         cPoints = [(0,0)
                   ,(-180,0),(180,0),(0,-180),(0,180)

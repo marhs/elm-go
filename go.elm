@@ -1,32 +1,32 @@
 -- Go board in Elm
 -- Marco Herrero <me@marhs.de>
 
-import Signal (Signal, sampleOn, foldp, (<~))
+import Signal exposing (Signal, sampleOn, foldp, (<~))
 import Signal
 import Mouse
-import Graphics.Collage (..)
-import Graphics.Element (..)
-import List (map, filter)
+import Graphics.Collage exposing (..)
+import Graphics.Element exposing (..)
+import List exposing (map, filter)
 import Color
-import Array (Array)
+import Array exposing (Array)
 import Array
-import Maybe (withDefault, Maybe (Just, Nothing))
+import Maybe exposing (withDefault, Maybe (Just, Nothing))
 
 -----------
 -- Model --
 -----------
 
 type alias State = { stones : Array Int
-                   , points : (Int,Int) 
-                   , nextTurn : Int 
+                   , points : (Int,Int)
+                   , nextTurn : Int
                    }
 
 -- The initial states contains an array filled with "-1"
 -- If a stone is placed, it's changed to 0 (black) or 1 (white)
 initialState : State
 initialState = { stones = Array.repeat (19 * 19) -1
-               , points = (0,0) 
-               , nextTurn = 0 
+               , points = (0,0)
+               , nextTurn = 0
                }
 
 ------------
@@ -35,12 +35,12 @@ initialState = { stones = Array.repeat (19 * 19) -1
 
 -- Modifies a state adding a stone
 click : (Int, Int) -> State -> State
-click (x,y) state = 
-    if | (x > 18) || (y > 18) -> state 
+click (x,y) state =
+    if | (x > 18) || (y > 18) -> state
        | (withDefault -1 (Array.get (19 * y + x) state.stones)) /= -1 -> deleteStone x y state
        | otherwise ->
-            let ix = (19 * y + x) 
-                stones' = Array.set ix state.nextTurn state.stones 
+            let ix = (19 * y + x)
+                stones' = Array.set ix state.nextTurn state.stones
                 nextTurn' = (state.nextTurn + 1) % 2
                 points' = state.points
             in { stones = stones', points = points', nextTurn = nextTurn' }
@@ -50,18 +50,47 @@ deleteStone : Int -> Int -> State -> State
 deleteStone a b state =
   let stone x y = (withDefault -1 (Array.get (19 * y + x) state.stones))
       ix = (19 * b + a)
-      stones' = Array.set ix -1 state.stones 
+      stones' = Array.set ix -1 state.stones
   in { state | stones <- stones' }
+
+-- Check if a stone is dead
+-- Place a stone (a, b) and check if one of the surroundings stones are dead
+-- TODO
+checkStone : Int -> Int -> State -> State
+checkStone a b state = state
+
+-- Give a position in the board, return a list with all then position of that
+-- stone
+-- TODO
+buildStone : Int -> Int -> Maybe (List (Int, Int))
+buildStone a b = Just [(1,2),(2,3)]
+
+-- I have to implement a (functional) recursive BFS
+buildStoneR : Int -> Int -> List (Int, Int) -> List (Int, Int)
+buildStoneR a b acc = [(1,2),(2,3)]
+
+-- Return the liberties of a stone
+-- TODO
+liberties : List (Int, Int) -> State -> Int
+liberties a s = 0
+    --let adj = [(0,1), (1,0), (0, -1), (-1, 0)]
+
+adjacent : Int -> Int -> List (Int, Int)
+adjacent x y = 
+    let adj = [(0,1), (1,0), (0, -1), (-1, 0)]
+        p1 = filter (\(a,b) -> (a >= 0) && (a < 19) && (b >= 0) && (b < 19) ) 
+        p2 = map (\(a, b) -> (a+x, b+y)) adj
+    in p1 p2
 
 ----------
 -- View --
 ----------
 
 display : State -> Element
-display s = collage 600 600 <| grid ++ drawStones s.stones 
- 
+display s = collage 600 600 <| grid ++ drawStones s.stones
+
 drawStones : Array Int -> List Form
-drawStones stones = 
+drawStones stones =
     let s x = withDefault 0 (Array.get x stones)
         drawStone = \a -> ( stone (a % 19) (a // 19) (s a) )
     in map drawStone (filter (\x -> (s x)>=0) [0..(19 * 19 - 1)])
